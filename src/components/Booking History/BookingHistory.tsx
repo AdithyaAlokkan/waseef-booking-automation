@@ -1,5 +1,7 @@
-import supabase from '@/database/supabaseClient'
+import supabase from '@/shared/database/supabaseClient'
 import { useEffect, useState } from 'react'
+import { format } from 'date-fns'
+
 import {
   Table,
   TableBody,
@@ -8,7 +10,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 
 interface Booking {
   id: number
@@ -25,7 +27,10 @@ const Database = () => {
 
   useEffect(() => {
     const fetchUsers = async () => {
-      const { data, error } = await supabase.from('Booking History').select()
+      const { data, error } = await supabase
+        .from('Booking History')
+        .select()
+        .order('created_at', { ascending: false })
 
       if (error) {
         setFetchError('Could not fetch bookings.')
@@ -63,11 +68,18 @@ const Database = () => {
                   <TableBody>
                     {bookings.map((booking) => (
                       <TableRow key={booking.id}>
-                        <TableCell>{booking.created_at}</TableCell>
+                        <TableCell>
+                          {format(
+                            new Date(booking.created_at),
+                            'MMM d | HH:mm',
+                          )}
+                        </TableCell>
                         <TableCell>{booking.Sport}</TableCell>
                         <TableCell>{booking.Cluster}</TableCell>
-                        <TableCell>{booking.Date}</TableCell>
-                        <TableCell>{booking.Time}</TableCell>
+                        <TableCell>
+                          {format(new Date(booking.created_at), 'MMM d')}
+                        </TableCell>
+                        <TableCell>{booking.Time.slice(0, 5)}</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>

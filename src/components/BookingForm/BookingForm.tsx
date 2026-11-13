@@ -2,6 +2,7 @@ import { Controller, useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { format } from 'date-fns'
+import supabase from '@/shared/database/supabaseClient'
 
 import { Card, CardContent, CardFooter } from '@/components/ui/card'
 import { Field, FieldError, FieldGroup, FieldLabel } from '../ui/field'
@@ -56,8 +57,21 @@ const BookingForm = () => {
     resolver: zodResolver(bookingSchema),
   })
 
-  function onSubmit(data: z.infer<typeof bookingSchema>) {
-    console.log(data)
+  async function onSubmit(d: z.infer<typeof bookingSchema>) {
+    console.log(d)
+
+    const { data, error } = await supabase
+      .from('Booking History')
+      .insert([d])
+      .select()
+
+    if (error) {
+      console.log(error)
+    }
+
+    if (data) {
+      console.log(data)
+    }
   }
 
   return (
