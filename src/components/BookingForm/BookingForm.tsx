@@ -61,176 +61,181 @@ const BookingForm = () => {
   }
 
   return (
-    <Card className='mb-10 w-full sm:w-80'>
-      <CardContent>
-        <form id='form' onSubmit={form.handleSubmit(onSubmit)}>
-          {/* Sport Field */}
-          <FieldGroup className='grid grid-cols-2 gap-4'>
-            <Controller
-              control={form.control}
-              name='Sport'
-              render={({
-                field: { onChange, onBlur, ...field },
-                fieldState,
-              }) => (
-                <Field data-invalid={fieldState.invalid}>
-                  <FieldLabel htmlFor={field.name}>Sport</FieldLabel>
-                  <Select {...field} onValueChange={onChange}>
-                    <SelectTrigger
-                      aria-invalid={fieldState.invalid}
-                      onBlur={onBlur}
-                      id={field.name}
-                    >
-                      <SelectValue>
-                        {(() => {
-                          const selectedSport = sports.find(
-                            (sport) => sport.value === field.value,
-                          )
+    <>
+      <h1 className='text-xl tracking-tight mb-5'>Schedule New Booking</h1>
+      <Card className='mb-10 w-full sm:w-80'>
+        <CardContent>
+          <form id='form' onSubmit={form.handleSubmit(onSubmit)}>
+            {/* Sport Field */}
+            <FieldGroup className='grid grid-cols-2 gap-4'>
+              <Controller
+                control={form.control}
+                name='Sport'
+                render={({
+                  field: { onChange, onBlur, ...field },
+                  fieldState,
+                }) => (
+                  <Field data-invalid={fieldState.invalid}>
+                    <FieldLabel htmlFor={field.name}>Sport</FieldLabel>
+                    <Select {...field} onValueChange={onChange}>
+                      <SelectTrigger
+                        aria-invalid={fieldState.invalid}
+                        onBlur={onBlur}
+                        id={field.name}
+                      >
+                        <SelectValue>
+                          {(() => {
+                            const selectedSport = sports.find(
+                              (sport) => sport.value === field.value,
+                            )
 
-                          if (!selectedSport) return null
+                            if (!selectedSport) return null
 
-                          const Icon = selectedSport.icon
+                            const Icon = selectedSport.icon
+
+                            return (
+                              <div className='flex items-center gap-2'>
+                                <Icon className='h-5 w-5' />
+                                <span>{selectedSport.name}</span>
+                              </div>
+                            )
+                          })()}
+                        </SelectValue>
+                      </SelectTrigger>
+                      <SelectContent className={'p-2'}>
+                        {sports.map((sport) => {
+                          const Icon = sport.icon
 
                           return (
-                            <div className='flex items-center gap-2'>
-                              <Icon className='h-5 w-5' />
-                              <span>{selectedSport.name}</span>
-                            </div>
+                            <SelectItem key={sport.value} value={sport.value}>
+                              <div className='flex items-center gap-2'>
+                                <Icon className='h-5 w-5' />
+                                <span>{sport.name}</span>
+                              </div>
+                            </SelectItem>
                           )
-                        })()}
-                      </SelectValue>
-                    </SelectTrigger>
-                    <SelectContent className={'p-2'}>
-                      {sports.map((sport) => {
-                        const Icon = sport.icon
-
-                        return (
-                          <SelectItem key={sport.value} value={sport.value}>
-                            <div className='flex items-center gap-2'>
-                              <Icon className='h-5 w-5' />
-                              <span>{sport.name}</span>
-                            </div>
+                        })}
+                      </SelectContent>
+                    </Select>
+                    {fieldState.invalid && (
+                      <FieldError errors={[fieldState.error]} />
+                    )}
+                  </Field>
+                )}
+              />
+              {/* Cluster Field */}
+              <Controller
+                control={form.control}
+                name='Cluster'
+                render={({
+                  field: { onChange, onBlur, ...field },
+                  fieldState,
+                }) => (
+                  <Field data-invalid={fieldState.invalid}>
+                    <FieldLabel htmlFor={field.name}>Cluster</FieldLabel>
+                    <Select {...field} onValueChange={onChange}>
+                      <SelectTrigger
+                        aria-invalid={fieldState.invalid}
+                        onBlur={onBlur}
+                        id={field.name}
+                      >
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {clusters.map((cluster) => (
+                          <SelectItem key={cluster} value={cluster}>
+                            {cluster}
                           </SelectItem>
-                        )
-                      })}
-                    </SelectContent>
-                  </Select>
-                  {fieldState.invalid && (
-                    <FieldError errors={[fieldState.error]} />
-                  )}
-                </Field>
-              )}
-            />
-            {/* Cluster Field */}
-            <Controller
-              control={form.control}
-              name='Cluster'
-              render={({
-                field: { onChange, onBlur, ...field },
-                fieldState,
-              }) => (
-                <Field data-invalid={fieldState.invalid}>
-                  <FieldLabel htmlFor={field.name}>Cluster</FieldLabel>
-                  <Select {...field} onValueChange={onChange}>
-                    <SelectTrigger
-                      aria-invalid={fieldState.invalid}
-                      onBlur={onBlur}
-                      id={field.name}
-                    >
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {clusters.map((cluster) => (
-                        <SelectItem key={cluster} value={cluster}>
-                          {cluster}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {fieldState.invalid && (
-                    <FieldError errors={[fieldState.error]} />
-                  )}
-                </Field>
-              )}
-            />
-            {/* Date Field */}
-            <Controller
-              control={form.control}
-              name='Date'
-              render={({ field, fieldState }) => (
-                <Field data-invalid={fieldState.invalid}>
-                  <FieldLabel htmlFor={field.name}>Date</FieldLabel>
-                  <Popover>
-                    <PopoverTrigger
-                      render={
-                        <Button
-                          variant={'outline'}
-                          id={field.name}
-                          className='justify-between font-normal '
-                        >
-                          {field.value ? (
-                            format(new Date(`${field.value}`), 'MMM d, yyyy')
-                          ) : (
-                            <span>Pick a date</span>
-                          )}
-                          <ChevronDownIcon
-                            data-icon='inline-end'
-                            className='text-muted-foreground'
-                          />
-                        </Button>
-                      }
-                    />
-                    <PopoverContent className='w-auto p-0' align='start'>
-                      <Calendar
-                        mode='single'
-                        selected={
-                          field.value ? new Date(`${field.value}`) : undefined
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {fieldState.invalid && (
+                      <FieldError errors={[fieldState.error]} />
+                    )}
+                  </Field>
+                )}
+              />
+              {/* Date Field */}
+              <Controller
+                control={form.control}
+                name='Date'
+                render={({ field, fieldState }) => (
+                  <Field data-invalid={fieldState.invalid}>
+                    <FieldLabel htmlFor={field.name}>Date</FieldLabel>
+                    <Popover>
+                      <PopoverTrigger
+                        render={
+                          <Button
+                            variant={'outline'}
+                            id={field.name}
+                            className='justify-between font-normal '
+                          >
+                            {field.value ? (
+                              format(new Date(`${field.value}`), 'MMM d, yyyy')
+                            ) : (
+                              <span>Pick a date</span>
+                            )}
+                            <ChevronDownIcon
+                              data-icon='inline-end'
+                              className='text-muted-foreground'
+                            />
+                          </Button>
                         }
-                        onSelect={(date) =>
-                          field.onChange(date ? format(date, 'yyyy-MM-dd') : '')
-                        }
-                        // defaultMonth={date}
                       />
-                    </PopoverContent>
-                  </Popover>
-                  {fieldState.invalid && (
-                    <FieldError errors={[fieldState.error]} />
-                  )}
-                </Field>
-              )}
-            />
-            {/* Time Field */}
-            <Controller
-              control={form.control}
-              name='Time'
-              render={({ field, fieldState }) => (
-                <Field data-invalid={fieldState.invalid}>
-                  <FieldLabel htmlFor={field.name}>Time</FieldLabel>
-                  <Input
-                    {...field}
-                    id={field.name}
-                    type='time'
-                    step={1800}
-                    aria-invalid={fieldState.invalid}
-                    className='flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm dark:bg-input/30 appearance-none [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none'
-                  />
-                  {fieldState.invalid && (
-                    <FieldError errors={[fieldState.error]} />
-                  )}
-                </Field>
-              )}
-            />
-          </FieldGroup>
-        </form>
-      </CardContent>
-      <CardFooter>
-        <Field orientation={'horizontal'} className='justify-end'>
-          <Button type='submit' form='form'>
-            Create Booking
-          </Button>
-        </Field>
-      </CardFooter>
-    </Card>
+                      <PopoverContent className='w-auto p-0' align='start'>
+                        <Calendar
+                          mode='single'
+                          selected={
+                            field.value ? new Date(`${field.value}`) : undefined
+                          }
+                          onSelect={(date) =>
+                            field.onChange(
+                              date ? format(date, 'yyyy-MM-dd') : '',
+                            )
+                          }
+                          // defaultMonth={date}
+                        />
+                      </PopoverContent>
+                    </Popover>
+                    {fieldState.invalid && (
+                      <FieldError errors={[fieldState.error]} />
+                    )}
+                  </Field>
+                )}
+              />
+              {/* Time Field */}
+              <Controller
+                control={form.control}
+                name='Time'
+                render={({ field, fieldState }) => (
+                  <Field data-invalid={fieldState.invalid}>
+                    <FieldLabel htmlFor={field.name}>Time</FieldLabel>
+                    <Input
+                      {...field}
+                      id={field.name}
+                      type='time'
+                      step={1800}
+                      aria-invalid={fieldState.invalid}
+                      className='flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm dark:bg-input/30 appearance-none [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none'
+                    />
+                    {fieldState.invalid && (
+                      <FieldError errors={[fieldState.error]} />
+                    )}
+                  </Field>
+                )}
+              />
+            </FieldGroup>
+          </form>
+        </CardContent>
+        <CardFooter>
+          <Field orientation={'horizontal'} className='justify-end'>
+            <Button type='submit' form='form'>
+              Create Booking
+            </Button>
+          </Field>
+        </CardFooter>
+      </Card>
+    </>
   )
 }
 
