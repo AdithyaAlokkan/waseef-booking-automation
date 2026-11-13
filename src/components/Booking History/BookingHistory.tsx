@@ -44,38 +44,38 @@ const Database = () => {
   return (
     <>
       {
-        <Card>
-          <CardHeader>
-            <CardTitle>Booking History</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {fetchError && <p>{fetchError}</p>}
-            {bookings && (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Created At</TableHead>
-                    <TableHead>Sport</TableHead>
-                    <TableHead>Cluster</TableHead>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Time</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {bookings.map((booking) => (
-                    <TableRow key={booking.id}>
-                      <TableCell>{booking.created_at}</TableCell>
-                      <TableCell>{booking.Sport}</TableCell>
-                      <TableCell>{booking.Cluster}</TableCell>
-                      <TableCell>{booking.Date}</TableCell>
-                      <TableCell>{booking.Time}</TableCell>
+        <>
+          <h1 className='text-xl tracking-tight mb-5'>Booking History</h1>
+          <Card>
+            <CardContent>
+              {fetchError && <p>{fetchError}</p>}
+              {bookings && (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Created At</TableHead>
+                      <TableHead>Sport</TableHead>
+                      <TableHead>Cluster</TableHead>
+                      <TableHead>Date</TableHead>
+                      <TableHead>Time</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            )}
-          </CardContent>
-        </Card>
+                  </TableHeader>
+                  <TableBody>
+                    {bookings.map((booking) => (
+                      <TableRow key={booking.id}>
+                        <TableCell>{booking.created_at}</TableCell>
+                        <TableCell>{booking.Sport}</TableCell>
+                        <TableCell>{booking.Cluster}</TableCell>
+                        <TableCell>{booking.Date}</TableCell>
+                        <TableCell>{booking.Time}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
+            </CardContent>
+          </Card>
+        </>
       }
     </>
   )
