@@ -2,8 +2,11 @@ import { Controller, useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { format } from 'date-fns'
+import type { Dispatch, SetStateAction } from 'react'
 import supabase from '@/shared/database/supabaseClient'
+import type { Booking } from '@/App'
 
+import { toast } from '@/components/ui/toast'
 import { Card, CardContent, CardFooter } from '@/components/ui/card'
 import { Field, FieldError, FieldGroup, FieldLabel } from '../ui/field'
 import { Button } from '@/components/ui/button'
@@ -26,7 +29,20 @@ const sports = [
   { name: 'Basketball', value: 'Basketball', icon: BasketballIcon },
   { name: 'Paddle', value: 'Paddle', icon: PadelIcon },
 ] as const
-const clusters = ['A', 'B', 'C', 'D', 'E'] as const
+
+const clusters = [
+  'A',
+  'B',
+  'C',
+  'D',
+  'E',
+  'F1',
+  'F2',
+  'G',
+  'H',
+  'I',
+  'J',
+] as const
 
 const bookingSchema = z.object({
   Sport: z.enum(['Basketball', 'Paddle']),
@@ -47,7 +63,11 @@ const bookingSchema = z.object({
   Status: z.string(),
 })
 
-const BookingForm = () => {
+interface BookingFormProps {
+  setBookings: Dispatch<SetStateAction<Booking[]>>
+}
+
+const BookingForm = ({ setBookings }: BookingFormProps) => {
   const form = useForm<z.infer<typeof bookingSchema>>({
     defaultValues: {
       Sport: 'Basketball',
@@ -60,19 +80,29 @@ const BookingForm = () => {
   })
 
   async function onSubmit(d: z.infer<typeof bookingSchema>) {
-    console.log(d)
-
     const { data, error } = await supabase
       .from('Booking History')
       .insert([d])
       .select()
 
     if (error) {
-      console.log(error)
+      toast.add({
+        title: 'Booking failed',
+        description: error.message,
+        type: 'error',
+      })
+      return
     }
 
     if (data) {
-      console.log(data)
+      setBookings((prevBookings) => [...data, ...prevBookings].slice(0, 10))
+      form.reset()
+
+      toast.add({
+        title: 'Booking scheduled',
+        description: 'Your booking will be attempted every day at 00:00 (AST, UTC+3).',
+        type: 'success',
+      })
     }
   }
 
@@ -118,7 +148,7 @@ const BookingForm = () => {
                           })()}
                         </SelectValue>
                       </SelectTrigger>
-                      <SelectContent className={'p-2'}>
+                      <SelectContent className='p-2'>
                         {sports.map((sport) => {
                           const Icon = sport.icon
 
@@ -139,6 +169,7 @@ const BookingForm = () => {
                   </Field>
                 )}
               />
+
               {/* Cluster Field */}
               <Controller
                 control={form.control}
@@ -171,6 +202,7 @@ const BookingForm = () => {
                   </Field>
                 )}
               />
+
               {/* Date Field */}
               <Controller
                 control={form.control}
@@ -182,12 +214,15 @@ const BookingForm = () => {
                       <PopoverTrigger
                         render={
                           <Button
-                            variant={'outline'}
+                            variant='outline'
                             id={field.name}
-                            className='justify-between font-normal '
+                            className='justify-between font-normal'
                           >
                             {field.value ? (
-                              format(new Date(`${field.value}`), 'MMM d, yyyy')
+                              format(
+                                new Date(`${field.value}T00:00:00`),
+                                'MMM d, yyyy',
+                              )
                             ) : (
                               <span>Pick a date</span>
                             )}
@@ -202,14 +237,15 @@ const BookingForm = () => {
                         <Calendar
                           mode='single'
                           selected={
-                            field.value ? new Date(`${field.value}`) : undefined
+                            field.value
+                              ? new Date(`${field.value}T00:00:00`)
+                              : undefined
                           }
                           onSelect={(date) =>
                             field.onChange(
                               date ? format(date, 'yyyy-MM-dd') : '',
                             )
                           }
-                          // defaultMonth={date}
                         />
                       </PopoverContent>
                     </Popover>
@@ -219,6 +255,7 @@ const BookingForm = () => {
                   </Field>
                 )}
               />
+
               {/* Time Field */}
               <Controller
                 control={form.control}
@@ -244,7 +281,7 @@ const BookingForm = () => {
           </form>
         </CardContent>
         <CardFooter>
-          <Field orientation={'horizontal'} className='justify-end'>
+          <Field orientation='horizontal' className='justify-end'>
             <Button type='submit' form='form'>
               Create Booking
             </Button>
