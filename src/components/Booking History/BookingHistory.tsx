@@ -19,6 +19,7 @@ interface Booking {
   Cluster: string
   Date: string
   Time: string
+  Status: string
 }
 
 const Database = () => {
@@ -63,6 +64,7 @@ const Database = () => {
                       <TableHead>Cluster</TableHead>
                       <TableHead>Date</TableHead>
                       <TableHead>Time</TableHead>
+                      <TableHead>Status</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -80,6 +82,7 @@ const Database = () => {
                           {format(new Date(booking.created_at), 'MMM d')}
                         </TableCell>
                         <TableCell>{booking.Time.slice(0, 5)}</TableCell>
+                        <TableCell>{booking.Status}</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>

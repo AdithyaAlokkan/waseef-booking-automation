@@ -44,6 +44,7 @@ const bookingSchema = z.object({
         { message: 'Time must be in 30-minute increments' },
       ),
     ),
+  Status: z.string(),
 })
 
 const BookingForm = () => {
@@ -53,6 +54,7 @@ const BookingForm = () => {
       Cluster: 'A',
       Date: format(new Date(), 'yyyy-MM-dd'),
       Time: format(new Date(), 'HH:mm'),
+      Status: 'Pending',
     },
     resolver: zodResolver(bookingSchema),
   })
