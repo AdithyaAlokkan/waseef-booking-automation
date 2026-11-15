@@ -23,7 +23,7 @@ import { Calendar } from '../ui/calendar'
 import { ChevronDownIcon } from 'lucide-react'
 import BasketballIcon from '@/assets/icons/andrsrxn--ball-basketball.svg?react'
 import PadelIcon from '@/assets/icons/material-symbols--padel-outline-rounded.svg?react'
-import { Input } from '@base-ui/react'
+import { Input } from '@/components/ui/input'
 
 const sports = [
   { name: 'Basketball', value: 'Basketball', icon: BasketballIcon },
@@ -60,6 +60,8 @@ const getCourtOptions = (sport: Sport, cluster: Cluster) => {
 
 const bookingSchema = z
   .object({
+    User_Name: z.string(),
+    Password: z.string(),
     Sport: z.enum(['Basketball', 'Paddle']),
     Cluster: z.enum(allClusters),
     Court: z.enum(courts),
@@ -132,6 +134,8 @@ const BookingForm = ({ setBookings }: BookingFormProps) => {
 
   const form = useForm<z.infer<typeof bookingSchema>>({
     defaultValues: {
+      User_Name: '',
+      Password: '',
       Sport: 'Basketball',
       Cluster: 'C',
       Court: 'N/A',
@@ -184,6 +188,50 @@ const BookingForm = ({ setBookings }: BookingFormProps) => {
         <CardContent>
           <form id='form' onSubmit={form.handleSubmit(onSubmit)}>
             <FieldGroup className='grid grid-cols-2 gap-4'>
+              {/* User Name Field */}
+              <Controller
+                control={form.control}
+                name='User_Name'
+                render={({ field, fieldState }) => (
+                  <Field data-invalid={fieldState.invalid}>
+                    <FieldLabel htmlFor={field.name}>User Name</FieldLabel>
+
+                    <Input
+                      {...field}
+                      id={field.name}
+                      type='text'
+                      aria-invalid={fieldState.invalid}
+                    />
+
+                    {fieldState.invalid && (
+                      <FieldError errors={[fieldState.error]} />
+                    )}
+                  </Field>
+                )}
+              />
+
+              {/* Password Field */}
+              <Controller
+                control={form.control}
+                name='Password'
+                render={({ field, fieldState }) => (
+                  <Field data-invalid={fieldState.invalid}>
+                    <FieldLabel htmlFor={field.name}>Password</FieldLabel>
+
+                    <Input
+                      {...field}
+                      id={field.name}
+                      type='password'
+                      aria-invalid={fieldState.invalid}
+                    />
+
+                    {fieldState.invalid && (
+                      <FieldError errors={[fieldState.error]} />
+                    )}
+                  </Field>
+                )}
+              />
+
               {/* Sport Field */}
               <Controller
                 control={form.control}
@@ -284,7 +332,7 @@ const BookingForm = ({ setBookings }: BookingFormProps) => {
                         <SelectValue />
                       </SelectTrigger>
 
-                      <SelectContent>
+                      <SelectContent className='p-2'>
                         {clusterOptions[selectedSport].map((cluster) => (
                           <SelectItem key={cluster} value={cluster}>
                             {cluster}
@@ -320,7 +368,7 @@ const BookingForm = ({ setBookings }: BookingFormProps) => {
                         <SelectValue />
                       </SelectTrigger>
 
-                      <SelectContent>
+                      <SelectContent className='p-2'>
                         {getCourtOptions(selectedSport, selectedCluster).map(
                           (court) => (
                             <SelectItem key={court} value={court}>

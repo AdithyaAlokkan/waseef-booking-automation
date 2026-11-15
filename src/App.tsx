@@ -10,6 +10,8 @@ import BookingForm from './components/BookingForm/BookingForm'
 
 export interface Booking {
   id: number
+  User_Name: string
+  Password: string
   created_at: string
   Sport: string
   Cluster: string
