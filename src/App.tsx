@@ -13,8 +13,10 @@ export interface Booking {
   created_at: string
   Sport: string
   Cluster: string
+  Court: string
   Date: string
-  Time: string
+  Time_Start: string
+  Time_End: string
   Status: string
 }
 

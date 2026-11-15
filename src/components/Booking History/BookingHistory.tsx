@@ -27,8 +27,10 @@ const BookingHistory = ({ bookings }: BookingHistoryProps) => {
                 <TableHead>Created At</TableHead>
                 <TableHead>Sport</TableHead>
                 <TableHead>Cluster</TableHead>
+                <TableHead>Court</TableHead>
                 <TableHead>Date</TableHead>
-                <TableHead>Time</TableHead>
+                <TableHead>Time Start</TableHead>
+                <TableHead>Time End</TableHead>
                 <TableHead>Status</TableHead>
               </TableRow>
             </TableHeader>
@@ -38,13 +40,19 @@ const BookingHistory = ({ bookings }: BookingHistoryProps) => {
                   <TableCell>
                     {format(new Date(booking.created_at), 'MMM d | HH:mm')}
                   </TableCell>
-                  <TableCell>{booking.Sport}</TableCell>
-                  <TableCell>{booking.Cluster}</TableCell>
+                  <TableCell>{booking.Sport && booking.Sport}</TableCell>
+                  <TableCell>{booking.Cluster && booking.Cluster}</TableCell>
+                  <TableCell>{booking.Court && booking.Court}</TableCell>
                   <TableCell>
                     {format(new Date(`${booking.Date}T00:00:00`), 'MMM d')}
                   </TableCell>
-                  <TableCell>{booking.Time.slice(0, 5)}</TableCell>
-                  <TableCell>{booking.Status}</TableCell>
+                  <TableCell>
+                    {booking.Time_Start && booking.Time_Start.slice(0, 5)}
+                  </TableCell>
+                  <TableCell>
+                    {booking.Time_End && booking.Time_End.slice(0, 5)}
+                  </TableCell>
+                  <TableCell>{booking.Status && booking.Status}</TableCell>
                 </TableRow>
               ))}
             </TableBody>

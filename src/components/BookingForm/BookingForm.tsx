@@ -1,7 +1,7 @@
-import { Controller, useForm } from 'react-hook-form'
+import { Controller, useForm, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { format } from 'date-fns'
+import { addMinutes, format } from 'date-fns'
 import type { Dispatch, SetStateAction } from 'react'
 import supabase from '@/shared/database/supabaseClient'
 import type { Booking } from '@/App'
@@ -30,9 +30,13 @@ const sports = [
   { name: 'Paddle', value: 'Paddle', icon: PadelIcon },
 ] as const
 
-const clusters = [
+const clusterOptions = {
+  Basketball: ['C', 'E', 'F1', 'F2', 'G', 'H', 'I', 'J'],
+  Paddle: ['A', 'D', 'I'],
+} as const
+
+const allClusters = [
   'A',
-  'B',
   'C',
   'D',
   'E',
@@ -43,47 +47,112 @@ const clusters = [
   'I',
   'J',
 ] as const
+const courts = ['N/A', '1', '2'] as const
 
-const bookingSchema = z.object({
-  Sport: z.enum(['Basketball', 'Paddle']),
-  Cluster: z.enum(clusters),
-  Date: z.iso.date(),
-  Time: z
-    .string()
-    .transform((time) => (time.length === 5 ? `${time}:00` : time))
-    .pipe(
-      z.iso.time().refine(
-        (time) => {
-          const [, minutes, seconds] = time.split(':')
-          return ['00', '30'].includes(minutes) && seconds === '00'
-        },
-        { message: 'Time must be in 30-minute increments' },
+type Sport = (typeof sports)[number]['value']
+type Cluster = (typeof allClusters)[number]
+
+const getCourtOptions = (sport: Sport, cluster: Cluster) => {
+  return sport === 'Paddle' && cluster === 'I'
+    ? (['1', '2'] as const)
+    : (['N/A'] as const)
+}
+
+const bookingSchema = z
+  .object({
+    Sport: z.enum(['Basketball', 'Paddle']),
+    Cluster: z.enum(allClusters),
+    Court: z.enum(courts),
+    Date: z.iso.date(),
+    Time_Start: z
+      .string()
+      .transform((time) => (time.length === 5 ? `${time}:00` : time))
+      .pipe(
+        z.iso.time().refine(
+          (time) => {
+            const [, minutes, seconds] = time.split(':')
+            return ['00', '30'].includes(minutes) && seconds === '00'
+          },
+          { message: 'Time must be in 30-minute increments' },
+        ),
       ),
-    ),
-  Status: z.string(),
-})
+    Time_End: z
+      .string()
+      .transform((time) => (time.length === 5 ? `${time}:00` : time))
+      .pipe(
+        z.iso.time().refine(
+          (time) => {
+            const [, minutes, seconds] = time.split(':')
+            return ['00', '30'].includes(minutes) && seconds === '00'
+          },
+          { message: 'Time must be in 30-minute increments' },
+        ),
+      ),
+    Status: z.string(),
+  })
+  .superRefine((booking, ctx) => {
+    const validClusters: readonly string[] = clusterOptions[booking.Sport]
+
+    if (!validClusters.includes(booking.Cluster)) {
+      ctx.addIssue({
+        code: 'custom',
+        message: 'Invalid cluster for the selected sport',
+        path: ['Cluster'],
+      })
+    }
+
+    const validCourts: readonly string[] = getCourtOptions(
+      booking.Sport,
+      booking.Cluster,
+    )
+
+    if (!validCourts.includes(booking.Court)) {
+      ctx.addIssue({
+        code: 'custom',
+        message: 'Invalid court for the selected cluster',
+        path: ['Court'],
+      })
+    }
+
+    if (booking.Time_End <= booking.Time_Start) {
+      ctx.addIssue({
+        code: 'custom',
+        message: 'End time must be later than start time.',
+        path: ['Time_End'],
+      })
+    }
+  })
 
 interface BookingFormProps {
   setBookings: Dispatch<SetStateAction<Booking[]>>
 }
 
 const BookingForm = ({ setBookings }: BookingFormProps) => {
+  const now = new Date()
+
   const form = useForm<z.infer<typeof bookingSchema>>({
     defaultValues: {
       Sport: 'Basketball',
-      Cluster: 'A',
+      Cluster: 'C',
+      Court: 'N/A',
       Date: format(new Date(), 'yyyy-MM-dd'),
-      Time: format(new Date(), 'HH:mm'),
+      Time_Start: format(new Date(), 'HH:mm'),
+      Time_End: format(addMinutes(now, 30), 'HH:mm'),
       Status: 'Pending',
     },
     resolver: zodResolver(bookingSchema),
   })
+
+  const selectedSport = useWatch({ control: form.control, name: 'Sport' })
+  const selectedCluster = useWatch({ control: form.control, name: 'Cluster' })
 
   async function onSubmit(d: z.infer<typeof bookingSchema>) {
     const { data, error } = await supabase
       .from('Booking History')
       .insert([d])
       .select()
+
+    console.log(data)
 
     if (error) {
       toast.add({
@@ -100,7 +169,8 @@ const BookingForm = ({ setBookings }: BookingFormProps) => {
 
       toast.add({
         title: 'Booking scheduled',
-        description: 'Your booking will be attempted every day at 00:00 (AST, UTC+3).',
+        description:
+          'Your booking will be attempted every day at 00:00 (AST, UTC+3).',
         type: 'success',
       })
     }
@@ -109,11 +179,12 @@ const BookingForm = ({ setBookings }: BookingFormProps) => {
   return (
     <>
       <h1 className='text-xl tracking-tight mb-5'>Schedule New Booking</h1>
+
       <Card className='mb-10 w-full sm:w-80'>
         <CardContent>
           <form id='form' onSubmit={form.handleSubmit(onSubmit)}>
-            {/* Sport Field */}
             <FieldGroup className='grid grid-cols-2 gap-4'>
+              {/* Sport Field */}
               <Controller
                 control={form.control}
                 name='Sport'
@@ -123,7 +194,17 @@ const BookingForm = ({ setBookings }: BookingFormProps) => {
                 }) => (
                   <Field data-invalid={fieldState.invalid}>
                     <FieldLabel htmlFor={field.name}>Sport</FieldLabel>
-                    <Select {...field} onValueChange={onChange}>
+
+                    <Select
+                      {...field}
+                      onValueChange={(value) => {
+                        if (value === null) return
+
+                        onChange(value)
+                        form.setValue('Cluster', clusterOptions[value][0])
+                        form.setValue('Court', 'N/A')
+                      }}
+                    >
                       <SelectTrigger
                         aria-invalid={fieldState.invalid}
                         onBlur={onBlur}
@@ -148,6 +229,7 @@ const BookingForm = ({ setBookings }: BookingFormProps) => {
                           })()}
                         </SelectValue>
                       </SelectTrigger>
+
                       <SelectContent className='p-2'>
                         {sports.map((sport) => {
                           const Icon = sport.icon
@@ -163,6 +245,7 @@ const BookingForm = ({ setBookings }: BookingFormProps) => {
                         })}
                       </SelectContent>
                     </Select>
+
                     {fieldState.invalid && (
                       <FieldError errors={[fieldState.error]} />
                     )}
@@ -180,6 +263,54 @@ const BookingForm = ({ setBookings }: BookingFormProps) => {
                 }) => (
                   <Field data-invalid={fieldState.invalid}>
                     <FieldLabel htmlFor={field.name}>Cluster</FieldLabel>
+
+                    <Select
+                      {...field}
+                      onValueChange={(value) => {
+                        if (value === null) return
+
+                        onChange(value)
+                        form.setValue(
+                          'Court',
+                          getCourtOptions(selectedSport, value)[0],
+                        )
+                      }}
+                    >
+                      <SelectTrigger
+                        aria-invalid={fieldState.invalid}
+                        onBlur={onBlur}
+                        id={field.name}
+                      >
+                        <SelectValue />
+                      </SelectTrigger>
+
+                      <SelectContent>
+                        {clusterOptions[selectedSport].map((cluster) => (
+                          <SelectItem key={cluster} value={cluster}>
+                            {cluster}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+
+                    {fieldState.invalid && (
+                      <FieldError errors={[fieldState.error]} />
+                    )}
+                  </Field>
+                )}
+              />
+
+              {/* Court Field */}
+              <Controller
+                control={form.control}
+                name='Court'
+                render={({
+                  field: { onChange, onBlur, ...field },
+                  fieldState,
+                }) => (
+                  <Field data-invalid={fieldState.invalid}>
+                    <FieldLabel htmlFor={field.name}>Court</FieldLabel>
+
                     <Select {...field} onValueChange={onChange}>
                       <SelectTrigger
                         aria-invalid={fieldState.invalid}
@@ -188,14 +319,18 @@ const BookingForm = ({ setBookings }: BookingFormProps) => {
                       >
                         <SelectValue />
                       </SelectTrigger>
+
                       <SelectContent>
-                        {clusters.map((cluster) => (
-                          <SelectItem key={cluster} value={cluster}>
-                            {cluster}
-                          </SelectItem>
-                        ))}
+                        {getCourtOptions(selectedSport, selectedCluster).map(
+                          (court) => (
+                            <SelectItem key={court} value={court}>
+                              {court}
+                            </SelectItem>
+                          ),
+                        )}
                       </SelectContent>
                     </Select>
+
                     {fieldState.invalid && (
                       <FieldError errors={[fieldState.error]} />
                     )}
@@ -210,6 +345,7 @@ const BookingForm = ({ setBookings }: BookingFormProps) => {
                 render={({ field, fieldState }) => (
                   <Field data-invalid={fieldState.invalid}>
                     <FieldLabel htmlFor={field.name}>Date</FieldLabel>
+
                     <Popover>
                       <PopoverTrigger
                         render={
@@ -226,6 +362,7 @@ const BookingForm = ({ setBookings }: BookingFormProps) => {
                             ) : (
                               <span>Pick a date</span>
                             )}
+
                             <ChevronDownIcon
                               data-icon='inline-end'
                               className='text-muted-foreground'
@@ -233,6 +370,7 @@ const BookingForm = ({ setBookings }: BookingFormProps) => {
                           </Button>
                         }
                       />
+
                       <PopoverContent className='w-auto p-0' align='start'>
                         <Calendar
                           mode='single'
@@ -249,6 +387,7 @@ const BookingForm = ({ setBookings }: BookingFormProps) => {
                         />
                       </PopoverContent>
                     </Popover>
+
                     {fieldState.invalid && (
                       <FieldError errors={[fieldState.error]} />
                     )}
@@ -256,13 +395,14 @@ const BookingForm = ({ setBookings }: BookingFormProps) => {
                 )}
               />
 
-              {/* Time Field */}
+              {/* Time_Start Field */}
               <Controller
                 control={form.control}
-                name='Time'
+                name='Time_Start'
                 render={({ field, fieldState }) => (
                   <Field data-invalid={fieldState.invalid}>
-                    <FieldLabel htmlFor={field.name}>Time</FieldLabel>
+                    <FieldLabel htmlFor={field.name}>Start Time</FieldLabel>
+
                     <Input
                       {...field}
                       id={field.name}
@@ -271,6 +411,31 @@ const BookingForm = ({ setBookings }: BookingFormProps) => {
                       aria-invalid={fieldState.invalid}
                       className='flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm dark:bg-input/30 appearance-none [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none'
                     />
+
+                    {fieldState.invalid && (
+                      <FieldError errors={[fieldState.error]} />
+                    )}
+                  </Field>
+                )}
+              />
+
+              {/* Time_End Field */}
+              <Controller
+                control={form.control}
+                name='Time_End'
+                render={({ field, fieldState }) => (
+                  <Field data-invalid={fieldState.invalid}>
+                    <FieldLabel htmlFor={field.name}>End Time</FieldLabel>
+
+                    <Input
+                      {...field}
+                      id={field.name}
+                      type='time'
+                      step={1800}
+                      aria-invalid={fieldState.invalid}
+                      className='flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm dark:bg-input/30 appearance-none [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none'
+                    />
+
                     {fieldState.invalid && (
                       <FieldError errors={[fieldState.error]} />
                     )}
@@ -280,6 +445,7 @@ const BookingForm = ({ setBookings }: BookingFormProps) => {
             </FieldGroup>
           </form>
         </CardContent>
+
         <CardFooter>
           <Field orientation='horizontal' className='justify-end'>
             <Button type='submit' form='form'>
