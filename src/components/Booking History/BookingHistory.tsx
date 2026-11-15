@@ -25,6 +25,7 @@ const BookingHistory = ({ bookings }: BookingHistoryProps) => {
             <TableHeader>
               <TableRow>
                 <TableHead>Created At</TableHead>
+                <TableHead>Created By</TableHead>
                 <TableHead>Sport</TableHead>
                 <TableHead>Cluster</TableHead>
                 <TableHead>Court</TableHead>
@@ -40,6 +41,7 @@ const BookingHistory = ({ bookings }: BookingHistoryProps) => {
                   <TableCell>
                     {format(new Date(booking.created_at), 'MMM d | HH:mm')}
                   </TableCell>
+                  <TableCell>{booking.User_Name}</TableCell>
                   <TableCell>{booking.Sport && booking.Sport}</TableCell>
                   <TableCell>{booking.Cluster && booking.Cluster}</TableCell>
                   <TableCell>{booking.Court && booking.Court}</TableCell>
