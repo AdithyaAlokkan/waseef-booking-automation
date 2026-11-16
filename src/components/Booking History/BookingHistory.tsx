@@ -1,3 +1,4 @@
+import supabase from '@/shared/database/supabaseClient'
 import { format } from 'date-fns'
 import type { Booking } from '@/App'
 
@@ -10,12 +11,39 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Card, CardContent } from '@/components/ui/card'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import { Button } from '@/components/ui/button'
+import { MoreHorizontalIcon } from 'lucide-react'
 
 interface BookingHistoryProps {
   bookings: Booking[]
+  onBookingDeleted: () => void
 }
 
-const BookingHistory = ({ bookings }: BookingHistoryProps) => {
+const BookingHistory = ({
+  bookings,
+  onBookingDeleted,
+}: BookingHistoryProps) => {
+  // Booking Delete handler
+  const handleDelete = async (bookingId: number) => {
+    const { error } = await supabase
+      .from('Booking History')
+      .delete()
+      .eq('id', bookingId)
+
+    if (error) {
+      console.error('Error deleting booking:', error)
+      return
+    }
+
+    onBookingDeleted()
+  }
+
   return (
     <>
       <h1 className='text-xl tracking-tight mb-5'>Booking History</h1>
@@ -33,6 +61,7 @@ const BookingHistory = ({ bookings }: BookingHistoryProps) => {
                 <TableHead>Time Start</TableHead>
                 <TableHead>Time End</TableHead>
                 <TableHead>Status</TableHead>
+                <TableHead></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -55,6 +84,32 @@ const BookingHistory = ({ bookings }: BookingHistoryProps) => {
                     {booking.Time_End && booking.Time_End.slice(0, 5)}
                   </TableCell>
                   <TableCell>{booking.Status && booking.Status}</TableCell>
+                  <TableCell className='text-right'>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger
+                        render={
+                          <Button
+                            variant='ghost'
+                            size='icon'
+                            className='size-8'
+                          >
+                            <MoreHorizontalIcon />
+                            <span className='sr-only'>Open menu</span>
+                          </Button>
+                        }
+                      />
+                      <DropdownMenuContent align='end'>
+                        <DropdownMenuItem
+                          variant='destructive'
+                          onClick={() => {
+                            handleDelete(booking.id)
+                          }}
+                        >
+                          Delete
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>
