@@ -1,3 +1,5 @@
+import { FunctionsHttpError } from '@supabase/supabase-js'
+
 import { Controller, useForm, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -153,12 +155,12 @@ const BookingForm = ({ setBookings }: BookingFormProps) => {
   const selectedCluster = useWatch({ control: form.control, name: 'Cluster' })
 
   async function onSubmit(d: z.infer<typeof bookingSchema>) {
+    // 1. Insert booking into Supabase
     const { data, error } = await supabase
       .from('Booking History')
       .insert([d])
       .select()
-
-    console.log(data)
+      .single()
 
     if (error) {
       toast.add({
@@ -169,17 +171,41 @@ const BookingForm = ({ setBookings }: BookingFormProps) => {
       return
     }
 
-    if (data) {
-      setBookings((prevBookings) => [...data, ...prevBookings].slice(0, 10))
-      form.reset()
+    if (!data) return
 
-      toast.add({
-        title: 'Booking scheduled',
-        description:
-          'Your booking will be attempted every day at 00:00 (AST, UTC+3).',
-        type: 'success',
-      })
+    // 2. Update local state
+    setBookings((prevBookings) => [data, ...prevBookings].slice(0, 10))
+
+    // 3. Reset form
+    form.reset()
+
+    // 4. Trigger GitHub Actions workflow
+    const { error: workflowError } = await supabase.functions.invoke(
+      'trigger-playwright-workflow',
+      {
+        body: {
+          booking_id: data.id,
+        },
+      },
+    )
+
+    // 5. Show appropriate toast
+    if (workflowError) {
+      console.error('Workflow trigger failed:', workflowError)
+
+      if (workflowError instanceof FunctionsHttpError) {
+        const errorBody = await workflowError.context.json()
+
+        console.error('Edge Function response:', errorBody)
+      }
     }
+
+    toast.add({
+      title: 'Booking scheduled',
+      description:
+        'Your booking has been saved and the booking attempt has been triggered.',
+      type: 'success',
+    })
   }
 
   return (
