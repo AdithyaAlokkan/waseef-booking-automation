@@ -21,9 +21,6 @@ import { Button } from '@/components/ui/button'
 import {
   Popover,
   PopoverContent,
-  PopoverDescription,
-  PopoverHeader,
-  PopoverTitle,
   PopoverTrigger,
 } from '@/components/ui/popover'
 
@@ -108,7 +105,9 @@ const BookingHistory = ({
                           >
                             <Info className='w-5' />
                           </PopoverTrigger>
-                          <PopoverContent>{booking.error_message}</PopoverContent>
+                          <PopoverContent>
+                            {booking.error_message}
+                          </PopoverContent>
                         </Popover>
                       )}
                     </div>
