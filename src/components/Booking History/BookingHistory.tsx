@@ -19,10 +19,13 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { Button } from '@/components/ui/button'
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from '@/components/ui/tooltip'
+  Popover,
+  PopoverContent,
+  PopoverDescription,
+  PopoverHeader,
+  PopoverTitle,
+  PopoverTrigger,
+} from '@/components/ui/popover'
 
 import { MoreHorizontalIcon } from 'lucide-react'
 import { Info } from 'lucide-react'
@@ -94,14 +97,19 @@ const BookingHistory = ({
                     <div className='flex items-center gap-3'>
                       {booking.Status && booking.Status}
                       {booking.error_message && (
-                        <Tooltip>
-                          <TooltipTrigger>
+                        <Popover>
+                          <PopoverTrigger
+                            render={
+                              <Button
+                                variant='ghost'
+                                aria-label='View error message'
+                              />
+                            }
+                          >
                             <Info className='w-5' />
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>{booking.error_message}</p>
-                          </TooltipContent>
-                        </Tooltip>
+                          </PopoverTrigger>
+                          <PopoverContent>{booking.error_message}</PopoverContent>
+                        </Popover>
                       )}
                     </div>
                   </TableCell>
