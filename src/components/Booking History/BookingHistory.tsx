@@ -59,7 +59,7 @@ const BookingHistory = ({
     toast.add({
       title: 'Booking deleted',
       description: deletedBooking
-        ? `${deletedBooking.Sport} at ${deletedBooking.Time_Start}`
+        ? `${deletedBooking.Sport} at ${deletedBooking.Time_Start} on ${deletedBooking.Date}`
         : 'Booking successfully deleted',
       type: 'success',
     })
