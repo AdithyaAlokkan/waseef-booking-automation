@@ -23,6 +23,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover'
+import { toast } from '@/components/ui/toast'
 
 import { MoreHorizontalIcon } from 'lucide-react'
 import { Info } from 'lucide-react'
@@ -38,15 +39,32 @@ const BookingHistory = ({
 }: BookingHistoryProps) => {
   // Booking Delete handler
   const handleDelete = async (bookingId: number) => {
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from('Booking History')
       .delete()
       .eq('id', bookingId)
+      .select()
 
     if (error) {
-      console.error('Error deleting booking:', error)
+      toast.add({
+        title: 'Error deleteing booking',
+        description: error.message,
+        type: 'error',
+      })
       return
     }
+
+    const deletedBooking = data?.[0]
+
+    toast.add({
+      title: 'Booking deleted',
+      description: deletedBooking
+        ? `${deletedBooking.Sport} at ${deletedBooking.Time_Start}`
+        : 'Booking successfully deleted',
+      type: 'success',
+    })
+
+    console.log(data)
 
     onBookingDeleted()
   }
@@ -99,6 +117,7 @@ const BookingHistory = ({
                             render={
                               <Button
                                 variant='ghost'
+                                size='icon'
                                 aria-label='View error message'
                               />
                             }
