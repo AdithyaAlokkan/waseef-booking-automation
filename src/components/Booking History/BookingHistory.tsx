@@ -18,7 +18,14 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Button } from '@/components/ui/button'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
+
 import { MoreHorizontalIcon } from 'lucide-react'
+import { Info } from 'lucide-react'
 
 interface BookingHistoryProps {
   bookings: Booking[]
@@ -60,7 +67,7 @@ const BookingHistory = ({
                 <TableHead>Date</TableHead>
                 <TableHead>Time Start</TableHead>
                 <TableHead>Time End</TableHead>
-                <TableHead>Status</TableHead>
+                <TableHead className='w-0'>Status</TableHead>
                 <TableHead></TableHead>
               </TableRow>
             </TableHeader>
@@ -83,7 +90,21 @@ const BookingHistory = ({
                   <TableCell>
                     {booking.Time_End && booking.Time_End.slice(0, 5)}
                   </TableCell>
-                  <TableCell>{booking.Status && booking.Status}</TableCell>
+                  <TableCell>
+                    <div className='flex items-center gap-3'>
+                      {booking.Status && booking.Status}
+                      {booking.error_message && (
+                        <Tooltip>
+                          <TooltipTrigger>
+                            <Info className='w-5' />
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>{booking.error_message}</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      )}
+                    </div>
+                  </TableCell>
                   <TableCell className='text-right'>
                     <DropdownMenu>
                       <DropdownMenuTrigger

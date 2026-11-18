@@ -60,8 +60,12 @@ const getCourtOptions = (sport: Sport, cluster: Cluster) => {
 
 const bookingSchema = z
   .object({
-    User_Name: z.string(),
-    Password: z.string(),
+    User_Name: z.string().refine((value) => value.trim().length > 0, {
+      message: 'Username is required',
+    }),
+    Password: z.string().refine((value) => value.trim().length > 0, {
+      message: 'Password is required',
+    }),
     Sport: z.enum(['Basketball', 'Paddle']),
     Cluster: z.enum(allClusters),
     Court: z.enum(courts),
@@ -90,7 +94,6 @@ const bookingSchema = z
           { message: 'Time must be in 30-minute increments' },
         ),
       ),
-    Status: z.string(),
   })
   .superRefine((booking, ctx) => {
     const validClusters: readonly string[] = clusterOptions[booking.Sport]
@@ -142,7 +145,6 @@ const BookingForm = ({ setBookings }: BookingFormProps) => {
       Date: format(new Date(), 'yyyy-MM-dd'),
       Time_Start: format(new Date(), 'HH:mm'),
       Time_End: format(addMinutes(now, 30), 'HH:mm'),
-      Status: 'Pending',
     },
     resolver: zodResolver(bookingSchema),
   })
