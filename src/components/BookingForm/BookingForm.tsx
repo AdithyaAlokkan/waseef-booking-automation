@@ -26,6 +26,7 @@ import { ChevronDownIcon } from 'lucide-react'
 import BasketballIcon from '@/assets/icons/andrsrxn--ball-basketball.svg?react'
 import PadelIcon from '@/assets/icons/material-symbols--padel-outline-rounded.svg?react'
 import { Input } from '@/components/ui/input'
+import { ExternalLink } from 'lucide-react'
 
 const sports = [
   { name: 'Basketball', value: 'Basketball', icon: BasketballIcon },
@@ -524,6 +525,22 @@ const BookingForm = ({ setBookings }: BookingFormProps) => {
 
         <CardFooter>
           <Field orientation='horizontal' className='justify-end'>
+            <Button
+              type='button'
+              variant='outline'
+              onClick={() =>
+                window.open(
+                  'https://pdcb.waseef.qa/ChooseLocation',
+                  '_blank',
+                  'noopener,noreferrer',
+                )
+              }
+            >
+              <div className='flex items-center gap-2'>
+                Waseef.qa
+                <ExternalLink />
+              </div>
+            </Button>
             <Button type='submit' form='form'>
               Create Booking
             </Button>
